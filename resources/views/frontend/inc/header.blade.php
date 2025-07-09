@@ -1,8 +1,8 @@
 <nav class="navbar navbar-expand-lg px-lg-4 py-lg-3 shadow sticky-top modern-navbar">
     <div class="container-fluid">
         <a class="navbar-brand me-5 fw-bold fs-3 h-font d-flex align-items-center" href="/">
-            <img src="/img/logo.png" style="max-width:80px; border-radius:0.8rem; box-shadow:0 2px 8px #b9c9d9;">
-            <span class="h5 fw-bold fs-3 ms-2 gradient-brand">DONQUIXOTE</span>
+            <img src="/img/logo2.png" style="max-width:80px; border-radius:0.8rem; box-shadow:0 2px 8px #b9c9d9;">
+            <span class="h5 fw-bold fs-3 ms-2 gradient-brand">Booking-Aj</span>
         </a>
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="offcanvas"
             data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
