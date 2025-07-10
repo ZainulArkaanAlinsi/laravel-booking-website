@@ -21,6 +21,15 @@ class DashboardController extends Controller
 
         $user = Auth::user();
 
+        // Ambil notifikasi unread (limit 5) + relasi payment & transaction
+        $notifications = Notifications::with(['payment.transaction'])
+            ->where('status', 'unread')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        $unreadCount = Notifications::where('status', 'unread')->count();
+
         // Jika ADMIN
         if ($user->is_admin) {
             // Statistik pembayaran Down Payment
@@ -78,7 +87,9 @@ class DashboardController extends Controller
                 'months',
                 'count',
                 'monthCount',
-                'percentage'
+                'percentage',
+                'notifications',
+                'unreadCount'
             ));
         }
 
@@ -88,7 +99,12 @@ class DashboardController extends Controller
         $myBookings = $customer ? $customer->Transactions()->latest()->take(5)->get() : collect();
 
         // Kirim data user ke view
-        return view('dashboard.index', compact('totalPaid', 'myBookings'));
+        return view('dashboard.index', compact(
+            'totalPaid',
+            'myBookings',
+            'notifications',
+            'unreadCount'
+        ));
     }
 
     public function notifiable(Request $request)

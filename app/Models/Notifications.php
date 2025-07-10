@@ -10,4 +10,9 @@ class Notifications extends Model
     use HasFactory;
     protected $guarded = ['id'];
     protected $casts = ['id' => 'string'];
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class, 'payment_id');
+    }
 }
