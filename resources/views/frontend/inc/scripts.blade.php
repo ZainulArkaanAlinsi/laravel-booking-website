@@ -1,5 +1,6 @@
 <script src="/bs/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Initialize Swiper -->
 <script>
     var swiper = new Swiper(".swiper-container", {
@@ -20,7 +21,7 @@
     });
 </script>
 <script>
-        window.addEventListener("scroll", function() {
+    window.addEventListener("scroll", function() {
     var navbar = document.querySelector(".navbar");
     if (window.scrollY > 0) {
         navbar.classList.add("scrolled");

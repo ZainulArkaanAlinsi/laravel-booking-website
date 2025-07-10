@@ -14,38 +14,48 @@ use App\Notifications\NewRoomReservationDownPayment;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // Penting: gunakan facade Auth!
 use RealRashid\SweetAlert\Facades\Alert;
 
 class OrderController extends Controller
 {
-
     public function index(Request $request)
     {
-        if (auth()->guest()) {
+        // Cek autentikasi user
+        if (!Auth::check()) {
             Alert::error('Please Login First!');
             return redirect('/login');
         }
+
         $stayfrom = Carbon::parse($request->from);
         $stayuntil = Carbon::parse($request->to);
         $room = Room::where('id', $request->room)->first();
 
-        $cektransaksi = Transaction::where('room_id', $request->room)->where([['check_in', '<=', $stayfrom], ['check_out', '>=', $stayuntil]])
+        // Cek ketersediaan kamar
+        $cektransaksi = Transaction::where('room_id', $request->room)
+            ->where([['check_in', '<=', $stayfrom], ['check_out', '>=', $stayuntil]])
             ->orWhere([['check_in', '>=', $stayfrom], ['check_in', '<=', $stayuntil]])
-            ->orWhere([['check_out', '>=', $stayfrom], ['check_out', '<=', $stayuntil]])->get();
+            ->orWhere([['check_out', '>=', $stayfrom], ['check_out', '<=', $stayuntil]])
+            ->get();
+
         if ($cektransaksi->count() > 0) {
             Alert::error('Kamar Tidak Tersedia');
             return back();
         }
+
+        // Ambil data customer
         if ($request->customer == null) {
-            $auth = Auth()->user()->Customer->id;
+            $auth = Auth::user()->Customer->id;
             $customer = Customer::where('id', $auth)->first();
         } else {
             $customer = Customer::where('id', $request->customer)->first();
         }
 
         $price = $room->price;
-        $dayDifference = $stayfrom->diffindays($stayuntil);
+        $dayDifference = $stayfrom->diffInDays($stayuntil);
         $total = $price * $dayDifference;
+
+        // Exclude metode pembayaran tertentu (misal: id 1)
         $paymentmethodnotid = [1];
         $paymentmet = PaymentMethod::whereNotIn('id', $paymentmethodnotid)->get();
 
@@ -57,18 +67,19 @@ class OrderController extends Controller
         $rooms = Room::where('id', $request->room)->first();
         $customers = Customer::where('id', $request->customer)->first();
 
-        //cek transaksi apakah kamar sudah ada booking
+        // Cek transaksi apakah kamar sudah dibooking
         $stayfrom = Carbon::parse($request->check_in);
         $stayuntil = Carbon::parse($request->check_out);
-        $cektransaksi = Transaction::where('room_id', $request->room)->where([['check_in', '<=', $stayfrom], ['check_out', '>=', $stayuntil]])
+        $cektransaksi = Transaction::where('room_id', $request->room)
+            ->where([['check_in', '<=', $stayfrom], ['check_out', '>=', $stayuntil]])
             ->orWhere([['check_in', '>=', $stayfrom], ['check_in', '<=', $stayuntil]])
-            ->orWhere([['check_out', '>=', $stayfrom], ['check_out', '<=', $stayuntil]])->get();
+            ->orWhere([['check_out', '>=', $stayfrom], ['check_out', '<=', $stayuntil]])
+            ->get();
+
         if ($cektransaksi->count() > 0) {
             Alert::error('Kamar Tidak Tersedia');
             return back();
         }
-        // ===========
-
 
         if ($customers->nik == null) {
             Alert::error('Kesalahan Data', 'Mohon Isi Data NIK');
@@ -79,16 +90,17 @@ class OrderController extends Controller
         $status = 'Pending';
         $payment = $this->storepayment($request, $transaction, $status);
 
+        // Notifikasi ke admin
         $superAdmins = User::where('is_admin', 1)->get();
-
         foreach ($superAdmins as $superAdmin) {
             $message = 'Reservation added by ' . $customers->name;
             event(new NewReservationEvent($message, $superAdmin));
             $superAdmin->notify(new NewRoomReservationDownPayment($transaction, $payment));
         }
         event(new RefreshDashboardEvent("Someone reserved a room"));
-        $inv = Payment::where('c_id', $request->customer)->orderby('id', 'desc')->first();
-        Alert::success('Thanks!', 'Room ' . $rooms->no . ' Has been reservated' . ' Please Pay now!');
+
+        $inv = Payment::where('c_id', $request->customer)->orderBy('id', 'desc')->first();
+        Alert::success('Thanks!', 'Room ' . $rooms->no . ' Has been reservated. Please Pay now!');
         return redirect('/bayar/' . $inv->Transaction->id);
     }
 
@@ -98,21 +110,17 @@ class OrderController extends Controller
         if ($p->status == 'Pending') {
             return abort(404);
         }
-        // dd($p);
         return view('frontend.invoice', compact('p'));
     }
 
     public function pembayaran($id)
     {
-
         $t = Transaction::findOrFail($id);
-        // dd($t->Payments[0]->Methode->nama);
         $pmi = [1];
-        $pay = $t->Payments->wherenotin('payment_method_id', $pmi)->first();
-        if ($pay->status == 'Pending' and $pay->image != null) {
+        $pay = $t->Payments->whereNotIn('payment_method_id', $pmi)->first();
+        if ($pay->status == 'Pending' && $pay->image != null) {
             return back();
         }
-        // dd($pay->id);
         $price = Room::where('id', $t->Room->id)->first()->price;
         return view('frontend.bayar', compact('t', 'price', 'pay'));
     }
@@ -120,13 +128,12 @@ class OrderController extends Controller
     public function bayar(Request $request)
     {
         $validatedData = $request->validate([
-            'image' => 'required|image|file',
+            'image' => 'required|image|file|max:3072', // 3MB max
         ]);
         if ($request->file('image')) {
-            $image = $validatedData['image'] = $request->file('image')->store('bukti-images', 'public');
+            $image = $request->file('image')->store('bukti-images', 'public');
         }
         $payment = Payment::findOrFail($request->id);
-        // dd($request->all());
         $payment->update([
             'image' => $image,
         ]);
@@ -136,23 +143,20 @@ class OrderController extends Controller
 
     private function storetransaction($request, $rooms)
     {
-        // dd($request->customer);
-        $storetransaction = Transaction::create([
-            // 'user_id' => auth()->user()->id,
+        return Transaction::create([
             'room_id' => $rooms->id,
             'c_id' => $request->customer,
             'check_in' => $request->check_in,
             'check_out' => $request->check_out,
             'status' => 'Reservation'
         ]);
-        return $storetransaction;
     }
 
     private function storepayment($request, $transaction, string $status)
     {
         $price = $request->price;
         $count = Payment::count() + 1;
-        $payment = Payment::create([
+        return Payment::create([
             'c_id' => $request->customer,
             'transaction_id' => $transaction->id,
             'price' => $price,
@@ -160,7 +164,5 @@ class OrderController extends Controller
             'payment_method_id' => $request->payment_method_id,
             'invoice' =>  '0' . $request->customer . 'INV' . $count . Str::random(4)
         ]);
-
-        return $payment;
     }
 }

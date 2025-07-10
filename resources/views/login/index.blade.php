@@ -193,13 +193,13 @@
                 <div class="form-floating mb-3 position-relative">
                     <i class="bi bi-person input-icon"></i>
                     <input type="text" name="username" id="username" class="form-control" placeholder="Username"
-                        required autofocus @if(Cookie::has('username')) value="{{ Cookie::get('username') }}" @endif>
+                        required autofocus value="{{ Cookie::get('username') ?? '' }}">
                     <label for="username">Username</label>
                 </div>
                 <div class="form-floating mb-3 position-relative">
                     <i class="bi bi-lock input-icon"></i>
                     <input type="password" name="password" id="password" class="form-control" placeholder="Password"
-                        required @if(Cookie::has('password')) value="{{ Cookie::get('password') }}" @endif>
+                        required>
                     <label for="password">Password</label>
                 </div>
                 <div class="remember-row mb-2">

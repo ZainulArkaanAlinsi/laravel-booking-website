@@ -1,4 +1,5 @@
 @extends('frontend.inc.main')
+
 @section('title')
 <title>Booking-aj | Cari Kamar</title>
 @endsection
@@ -21,7 +22,7 @@
     }
 
     .filter-bar {
-        background: rgba(255, 255, 255, 0.84);
+        background: rgba(255, 255, 255, 0.88);
         border-radius: 1.3rem;
         box-shadow: 0 6px 28px rgba(120, 120, 120, 0.10);
         padding: 1.3rem 2rem 0.7rem 2rem;
@@ -64,7 +65,7 @@
     }
 
     .room-card {
-        background: rgba(255, 255, 255, 0.90);
+        background: rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(7px);
         border-radius: 1.5rem;
         border: 1.5px solid #e0e0e0;
@@ -95,7 +96,7 @@
         transition: transform 0.4s, box-shadow 0.3s;
     }
 
-    .room-image:hover {
+    .room-card:hover .room-image {
         transform: scale(1.06) rotate(-2deg);
         box-shadow: 0 16px 40px #bdbdbd44;
         z-index: 2;
@@ -156,6 +157,11 @@
         box-shadow: 0 4px 16px #bdbdbd33;
     }
 
+    .btn-custom:active {
+        background: #757575;
+        color: #fff;
+    }
+
     @media (max-width: 991px) {
         .rooms-section-title {
             font-size: 2rem;
@@ -186,15 +192,15 @@
         @csrf
         <div class="form-group">
             <label class="form-label" style="color:#757575;">Check-in</label>
-            <input type="date" name="from" class="form-control shadow-none mb-2">
+            <input type="date" name="from" class="form-control shadow-none mb-2" required>
         </div>
         <div class="form-group">
             <label class="form-label" style="color:#757575;">Check-out</label>
-            <input type="date" name="to" class="form-control shadow-none mb-2">
+            <input type="date" name="to" class="form-control shadow-none mb-2" required>
         </div>
         <div class="form-group">
             <label class="form-label" style="color:#757575;">How many person?</label>
-            <input type="number" name="count" class="form-control shadow-none" value="1" min="1">
+            <input type="number" name="count" class="form-control shadow-none" value="1" min="1" required>
         </div>
         <button class="btn btn-search" type="submit"><i class="bi bi-search"></i> SEARCH</button>
     </form>
@@ -234,7 +240,7 @@
                         <span class="badge rounded-pill"><i class="bi bi-fire"></i> Room Heater</span>
                         @endif
                         @if ($r->capacity > 10)
-                        <span class="badge rounded-pill"><i class="bi bi-cloud-drizzle"></i> Smooking Room</span>
+                        <span class="badge rounded-pill"><i class="bi bi-cloud-drizzle"></i> Smoking Room</span>
                         @endif
                     </div>
                 </div>

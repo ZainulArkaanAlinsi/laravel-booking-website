@@ -6,7 +6,6 @@ use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cookie;
 
 class LoginController extends Controller
 {
@@ -27,20 +26,18 @@ class LoginController extends Controller
             'password' => 'required'
         ]);
 
-        $remember = $request->has('remember') ? true : false;
-        $minutes = 1440;
+        $remember = $request->has('remember');
+        if (Auth::attempt(['username' => $request->username, 'password' => $request->password], $remember)) {
+            $request->session()->regenerate();
 
-        if (Auth::attempt(['username' => $request->input('username'), 'password' => $request->input('password')], $remember)) {
-            if ($request->has('remember')) {
-                Cookie::queue('username', $request->username, $minutes);
-                Cookie::queue('password', $request->password, $minutes);
+            // Redirect sesuai role user
+            if (Auth::user()->is_admin) {
+                return redirect()->intended('/dashboard')->with('success', 'Login admin berhasil');
             }
-            // Flash pesan sukses ke session
             return redirect()->intended('/')->with('success', 'Login berhasil');
         }
 
-        // Flash pesan error ke session
-        return redirect('/login')->with('loginError', 'Username atau password salah!');
+        return back()->with('loginError', 'Username atau password salah!');
     }
 
     public function store(Request $request)
@@ -48,23 +45,22 @@ class LoginController extends Controller
         $validated = $request->validate([
             'name' =>  'required|max:255',
             'username' => ['required', 'min:3', 'max:255', 'unique:users'],
-            'password' => ['min:3', 'max:255', 'required'],
+            'password' => ['required', 'min:3', 'max:255', 'confirmed'],
         ]);
 
-        // Validasi konfirmasi password (jika ada)
-        if ($request->confirmation_password != $request->password) {
-            return redirect('/register')->with('loginError', 'Konfirmasi password tidak cocok!');
-        }
-
-        $p = Customer::create([
+        // Membuat customer baru
+        $customer = Customer::create([
             'name' => $request->name
         ]);
+
+        // Membuat user baru, default is_admin = 0 (user biasa)
         User::create([
             'username' => $request->username,
-            'c_id' => $p->id,
-            'password' => bcrypt($request->password)
+            'c_id' => $customer->id,
+            'password' => bcrypt($request->password),
+            'is_admin' => 0
         ]);
-        // Flash pesan sukses ke session
+
         return redirect('/login')->with('success', 'Registrasi berhasil. Silakan login!');
     }
 
@@ -73,7 +69,6 @@ class LoginController extends Controller
         Auth::logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();
-        // Flash pesan sukses ke session
         return redirect('/login')->with('success', 'Berhasil logout!');
     }
 }

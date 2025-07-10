@@ -1,3 +1,4 @@
+<!-- Navbar Booking-Aj -->
 <nav class="navbar navbar-expand-lg px-lg-4 py-lg-3 shadow sticky-top modern-navbar">
     <div class="container-fluid">
         <a class="navbar-brand me-5 fw-bold fs-3 h-font d-flex align-items-center" href="/">
@@ -52,28 +53,45 @@
                         <a class="nav-link dropdown-toggle nav-link-modern text-dark d-flex align-items-center" href="#"
                             role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle fs-5 me-1"></i>
+                            <span class="d-none d-lg-inline ms-1">{{ auth()->user()->username ?? 'User' }}</span>
                         </a>
-                        <ul class="dropdown-menu shadow rounded-3">
-                            @if(auth()->user()->is_admin == 1)
-                            <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-pc-display"></i> My
-                                    Dashboard</a></li>
+                        <ul class="dropdown-menu shadow rounded-3 dropdown-menu-end">
                             <li>
-                                <hr class="dropdown-divider">
+                                <a class="dropdown-item" href="/dashboard">
+                                    <i class="bi bi-pc-display"></i>
+                                    {{ auth()->user()->is_admin ? 'Admin Dashboard' : 'Dashboard' }}
+                                </a>
                             </li>
-                            @endif
-                            <li><a class="dropdown-item" href="/myaccount"><i class="bi bi-person-vcard-fill"></i> My
-                                    Account</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="/history"><i class="bi bi-cart-check-fill"></i>
-                                    History</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
-                                <a class="dropdown-item" href="/logout">
-                                    <i class="bi bi-box-arrow-right text-danger"></i> Logout
+                                <a class="dropdown-item" href="/myaccount">
+                                    <i class="bi bi-person-vcard-fill"></i>
+                                    My Account
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/history">
+                                    <i class="bi bi-cart-check-fill"></i>
+                                    History
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <!-- Logout POST: Form tersembunyi + JS -->
+                                <form id="logout-form" action="/logout" method="POST" class="d-none">
+                                    @csrf
+                                </form>
+                                <a class="dropdown-item" href="#"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <i class="bi bi-box-arrow-right text-danger"></i>
+                                    Logout
                                 </a>
                             </li>
                         </ul>
@@ -85,8 +103,12 @@
     </div>
 </nav>
 
+
+
+
+
+
 <style>
-    /* Navbar background & effect */
     .modern-navbar {
         background: rgba(245, 247, 250, 0.98);
         border-bottom: 1.5px solid #e0e0e0;

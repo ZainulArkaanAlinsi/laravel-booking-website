@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -20,7 +21,8 @@ class User extends Authenticatable
     protected $guarded = ['id'];
     protected $table = 'users';
 
-    public function Customer(){
+    public function Customer()
+    {
         return $this->belongsTo(Customer::class, 'c_id', 'id');
     }
 
@@ -42,4 +44,14 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    // Customer.php
+    public function Transactions()
+    {
+        return $this->hasMany(Transaction::class, 'c_id');
+    }
+    public function Payments()
+    {
+        return $this->hasMany(Payment::class, 'c_id');
+    }
 }

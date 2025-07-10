@@ -7,25 +7,30 @@ use App\Models\Payment;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 use RealRashid\SweetAlert\Facades\Alert;
-use Termwind\Components\Raw;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        if (auth()->guest()) {
+        // Pastikan user login
+        if (!Auth::check()) {
             return redirect('/login');
         }
-        if (auth()->user()->is_admin == 0) {
+
+        $user = Auth::user();
+
+        // Jika user bukan admin, tampilkan 404
+        if (!$user->is_admin) {
             abort(404);
         }
-        // Menghitung total harga dari semua pembayaran dengan status "Down Payment"
+
+        // Total pembayaran "Down Payment"
         $payments = Payment::where('status', 'Down Payment')->get();
         $totalAmount = $payments->sum('price');
 
-        // Menghitung total jumlah pembayaran per bulan
+        // Group pembayaran per bulan (format: Jan, Feb, dst)
         $paymentsPerMonth = $payments->groupBy(function ($payment) {
             return Carbon::parse($payment->created_at)->format('M');
         });
@@ -36,48 +41,60 @@ class DashboardController extends Controller
 
         foreach ($paymentsPerMonth as $month => $paymentGroup) {
             $months[] = $month;
-            $total = $paymentGroup->sum('price');
-            $count[$month] = $total;
+            $count[$month] = $paymentGroup->sum('price');
             $qty[] = $paymentGroup->count();
         }
 
-        // dd($months);
         $currentMonth = Carbon::now()->format('M');
-        $monthCount = isset($count[$currentMonth]) ? $count[$currentMonth] : 0;
-        $currentMonthNumber = Carbon::now()->format('m') - 0;
+        $monthCount = $count[$currentMonth] ?? 0;
+
+        // Penanganan edge case: jika bulan sekarang Januari, bulan sebelumnya Desember
+        $currentMonthNumber = (int) Carbon::now()->format('m');
         $previousMonthNumber = $currentMonthNumber - 1;
+        if ($previousMonthNumber < 1) {
+            $previousMonthNumber = 12;
+        }
         $previousMonth = Carbon::createFromDate(null, $previousMonthNumber)->format('M');
-        $transactionCount = Transaction::where('status', 'Reservation')->count();
-        $countPreviousMonth = $count["Jul"];
-        // dd($countPreviousMonth);
+        $countPreviousMonth = $count[$previousMonth] ?? 0;
+
+        // Hitung persentase
         $percentage = $countPreviousMonth > 0 ? ($monthCount / $countPreviousMonth) * 100 : 0;
 
         $kiri = 0;
         $kanan = 0;
-
         if ($percentage > 100) {
             $kiri = 100 / $percentage * 100;
             $kanan = ($percentage - 100) / $percentage * 100;
-        } else if ($percentage == 0) {
+        } elseif ($percentage == 0) {
             $kiri = 0;
             $kanan = 0;
         }
 
-        return view('dashboard.index', compact('transactionCount', 'kiri', 'kanan', 'qty', 'totalAmount', 'months', 'count', 'monthCount', 'percentage'));
+        $transactionCount = Transaction::where('status', 'Reservation')->count();
+
+        return view('dashboard.index', compact(
+            'transactionCount',
+            'kiri',
+            'kanan',
+            'qty',
+            'totalAmount',
+            'months',
+            'count',
+            'monthCount',
+            'percentage'
+        ));
     }
 
     public function notifiable(Request $request)
     {
-        // dd($request);
-        if (auth()->guest()) {
+        if (!Auth::check()) {
             return redirect('/login');
         }
-        if (auth()->user()->is_admin == 0) {
+        if (!Auth::user()->is_admin) {
             abort(404);
         }
-        // $no = json_decode($notif->data)->message[5] . json_decode($notif->data)->message[6] . json_decode($notif->data)->message[7];
-
-        return redirect('/dashboard/order', compact('no'));
+        // $no = ... (kode notifikasi Anda)
+        return redirect('/dashboard/order');
     }
 
     public function markall()

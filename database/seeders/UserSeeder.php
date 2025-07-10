@@ -17,48 +17,26 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        User::create([
-            'username' =>  'admin',
-            // 'name' => 'admin',
-            'c_id' => 1,
-            'telp' => 851312512,
-            // 'birthdate' => Carbon::yesterday(),
-            // 'jk' => '?',
-            'email' => 'admin@gmail.com',
-            'password'=> bcrypt('admin'),
-            'is_admin' => 1
-        ]);
+        $adminCustomer = Customer::create(['name' => 'Admin']);
+        $customerCustomer = Customer::create(['name' => 'Customer']);
+
+        User::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'c_id' => $adminCustomer->id,
+                'telp' => 851312512,
+                'email' => 'admin@gmail.com',
+                'password' => bcrypt('admin'),
+                'is_admin' => 1
+            ]
+        );
         User::create([
             'username' =>  'Customer',
-            // 'name' => 'admin',
-            'c_id' => 2,
+            'c_id' => $customerCustomer->id,
             'telp' => 851312512,
-            // 'birthdate' => Carbon::yesterday(),
-            // 'jk' => '?',
             'email' => 'admsin@gmail.com',
-            'password'=> bcrypt('admin'),
+            'password' => bcrypt('admin'),
             'is_admin' => 0
         ]);
-
-        // User::create([
-        //     'username' =>  'bukanadmin',
-        //     'name' => 'bukanadmin',
-        //     'address' => 'helloooo worlddddddddd',
-        //     'telp' => 851312512,
-        //     'birthdate' => Carbon::now(),
-        //     'jk' => '?',
-        //     'email' => 'bukanadmin@gmail.com',
-        //     'password'=> bcrypt('bukanadmin')
-        // ]);
-        // User::create([
-        //     'username' =>  'admin2',
-        //     'name' => 'admin2',
-        //     'address' => 'helloooo worlddddddddd',
-        //     'telp' => 8513125212,
-        //     'birthdate' => 'asdasda',
-        //     'jk' => '?',
-        //     'email' => 'admin2@gmail.com',
-        //     'password' => bcrypt('admin2')
-        // ]);
     }
 }
