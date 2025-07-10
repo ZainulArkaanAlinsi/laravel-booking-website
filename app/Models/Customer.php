@@ -9,11 +9,24 @@ use Illuminate\Notifications\Notifiable;
 class Customer extends Model
 {
     use HasFactory, Notifiable;
+
     protected $guarded = ['id'];
-    public function Transactions(){
-        return $this->hasMany(Transaction::class);
+
+    // Relasi ke transaksi
+    public function Transactions()
+    {
+        return $this->hasMany(Transaction::class, 'c_id');
     }
-    public function User(){
-        return $this->hasOne(User::class, 'id');
+
+    // Relasi ke user (user yang memiliki customer ini)
+    public function User()
+    {
+        return $this->hasOne(User::class, 'c_id');
+    }
+
+    // Relasi ke pembayaran
+    public function Payments()
+    {
+        return $this->hasMany(\App\Models\Payment::class, 'c_id');
     }
 }

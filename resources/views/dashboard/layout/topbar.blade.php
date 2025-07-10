@@ -1,10 +1,10 @@
 <!-- Sidebar Toggle (Topbar) -->
-<button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle me-3">
+<button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle me-3" aria-label="Toggle Sidebar">
     <i class="fa fa-bars"></i>
 </button>
 
 <!-- Topbar Navbar -->
-<ul class="navbar-nav ms-auto">
+<ul class="navbar-nav ms-auto align-items-center">
 
     <!-- Nav Item - Search Dropdown (Visible Only XS) -->
     <li class="nav-item dropdown d-sm-none">
@@ -36,7 +36,8 @@
             $countnotif = App\Models\Notifications::where('status', 'unread')->count();
             @endphp
             @if($countnotif > 0)
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm"
+                style="font-size:0.8rem;">
                 {{ $countnotif }}
                 <span class="visually-hidden">unread notifications</span>
             </span>
@@ -44,9 +45,9 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="alertsDropdown" style="min-width: 350px;">
             <li>
-                <h6 class="dropdown-header">Alerts Center</h6>
+                <h6 class="dropdown-header text-primary fw-bold">Alerts Center</h6>
             </li>
-            @foreach ($notif as $n)
+            @forelse ($notif as $n)
             @php
             $url = json_decode($n->data)->url;
             $message = json_decode($n->data)->message;
@@ -91,7 +92,11 @@
                     </button>
                 </form>
             </li>
-            @endforeach
+            @empty
+            <li>
+                <span class="dropdown-item text-muted small">No new notifications.</span>
+            </li>
+            @endforelse
             <li>
                 <hr class="dropdown-divider">
             </li>
@@ -104,7 +109,9 @@
         </ul>
     </li>
 
-    <div class="topbar-divider d-none d-sm-block"></div>
+    <li>
+        <div class="topbar-divider d-none d-sm-block"></div>
+    </li>
 
     <!-- Nav Item - User Information -->
     <li class="nav-item dropdown">
